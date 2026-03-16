@@ -1,0 +1,504 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "facebook-comment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1328,
+        112
+      ],
+      "id": "888d1610-f5e0-4bcc-9b0f-f8a32fb8ef1b",
+      "name": "Webhook",
+      "webhookId": "329ea16b-c8a7-47d2-9bf1-69b6862a9880"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{$json.query[\"hub.challenge\"] ?? 'OK'}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1104,
+        112
+      ],
+      "id": "fc82d869-8199-4d23-910f-5f4ac49848f8",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-verb-add",
+              "leftValue": "={{$('Webhook').item.json.body.entry[0].changes[0].value.verb}}",
+              "rightValue": "add",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "check-interested",
+              "leftValue": "={{$('Webhook').item.json.body.entry[0].changes[0].value.message ?? ''}}",
+              "rightValue": "interested",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        112
+      ],
+      "id": "4bc645da-152e-4c24-b72d-efc0b599d1a7",
+      "name": "Is Comment 'Interested'?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5da1213e-4d21-441e-92e0-9ff3b9dd4b8d",
+              "name": "Name",
+              "value": "={{$('Webhook').item.json.body.entry[0].changes[0].value.from.name}}",
+              "type": "string"
+            },
+            {
+              "id": "4134fb46-77ac-4084-afbf-5593559b8032",
+              "name": "User_id",
+              "value": "={{$('Webhook').item.json.body.entry[0].changes[0].value.from.id}}",
+              "type": "string"
+            },
+            {
+              "id": "2ec216a2-15a3-451b-ac40-ee440e40708f",
+              "name": "Post_id",
+              "value": "={{$('Webhook').item.json.body.entry[0].changes[0].value.post_id}}",
+              "type": "string"
+            },
+            {
+              "id": "e53968f6-e029-4595-b274-1676eed7498d",
+              "name": "comment_id",
+              "value": "={{$('Webhook').item.json.body.entry[0].changes[0].value.comment_id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -672,
+        112
+      ],
+      "id": "de73d466-9fad-4742-8f4c-c62884a4242f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1bX6bH7Dst0k_JF6SQlSW85hcop8Qwic3Wnt_hsgg4JM/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bX6bH7Dst0k_JF6SQlSW85hcop8Qwic3Wnt_hsgg4JM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "User_id",
+              "lookupValue": "={{ $json.User_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -448,
+        112
+      ],
+      "id": "0ae8f5f3-3ca3-468a-89cd-880d2d22ddf5",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dL8NniqPP4db5fZ0",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-new-user",
+              "leftValue": "={{$json.User_id ?? ''}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        112
+      ],
+      "id": "76afc961-1999-497c-8e0d-b17d4c33c45b",
+      "name": "Is New User?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/{{$('Edit Fields').item.json[\"comment_id\"]}}/comments",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "EAAUUqzZBRFWgBQ8k3JSnOV4LUZCHQDl4AzNQK9hKKRf5FbHzMC34cSpwdLKtfHLKwzEftO4op7lUL8PBr9aTqC2mlF3MMX1RJ6pNUm1095sr5SIobhcouyodVm2az0M1lEhHO2DmTFZB5JWYMCbLplf7ZB7b0dym1EZCspLi0a0wWuj0gMRjIVrIVt7KCELvDmgz2EVQZC8eez6DZAwRx7Pvkjs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"message\": \"Thanks for your interest! Please fill this form to continue: https://docs.google.com/forms/d/e/1FAIpQLSc-sr3rYzeB2oA_dnf0Z88tn4r9tVIeiF295_s19aiaIPqmsA/viewform\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "aed73c50-af7f-4ac0-998e-e57a6ae9516b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1bX6bH7Dst0k_JF6SQlSW85hcop8Qwic3Wnt_hsgg4JM/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bX6bH7Dst0k_JF6SQlSW85hcop8Qwic3Wnt_hsgg4JM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Edit Fields').item.json.Name }}",
+            "Email": "",
+            "Phn no": "",
+            "Services": "",
+            "User_id": "={{ $('Edit Fields').item.json.User_id }}",
+            "Post_id": "={{ $('Edit Fields').item.json.Post_id }}",
+            "comment_id": "={{ $('Edit Fields').item.json.comment_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phn no",
+              "displayName": "Phn no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Services",
+              "displayName": "Services",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "User_id",
+              "displayName": "User_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post_id",
+              "displayName": "Post_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "comment_id",
+              "displayName": "comment_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "054490c0-9e61-4963-982a-afbe679b5382",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dL8NniqPP4db5fZ0",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "prasad0725.app.n8n.cloud",
+            "user-agent": "Webhooks/1.0 (https://fb.me/webhooks)",
+            "content-length": "768",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2a03:2880:ff:5a::",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9dabf6e6ee16df23-SEA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "2a03:2880:ff:5a::, 104.22.42.133",
+            "x-forwarded-host": "prasad0725.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-98-7dc85bfb85-79m9j",
+            "x-hub-signature": "sha1=ff730d7d17d381927b8e88dc5e900acc72852676",
+            "x-hub-signature-256": "sha256=e755e4482611ca0e99a1de1ce618eba27b50eee9c2e821a4bda14b6bfd139664",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2a03:2880:ff:5a::"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "entry": [
+              {
+                "id": "1047083791817086",
+                "time": 1773246843,
+                "changes": [
+                  {
+                    "value": {
+                      "from": {
+                        "id": "27252685360998032",
+                        "name": "Vijay Antony"
+                      },
+                      "post": {
+                        "status_type": "added_photos",
+                        "is_published": true,
+                        "updated_time": "2026-03-11T16:33:58+0000",
+                        "permalink_url": "https://www.facebook.com/permalink.php?story_fbid=pfbid02qnGm4reTji3BBfwiK2CaLLRRxf8DnLgwe8SFw3NNEYirPnqvLaXfyie4eK8VjxDLl&id=61586352090973",
+                        "promotion_status": "inactive",
+                        "id": "1047083791817086_122096133129211736"
+                      },
+                      "message": "interested",
+                      "post_id": "1047083791817086_122096133129211736",
+                      "comment_id": "122096133129211736_3859459760852661",
+                      "created_time": 1773246838,
+                      "item": "comment",
+                      "parent_id": "1047083791817086_122096133129211736",
+                      "verb": "add"
+                    },
+                    "field": "feed"
+                  }
+                ]
+              }
+            ],
+            "object": "page"
+          },
+          "webhookUrl": "https://prasad0725.app.n8n.cloud/webhook/facebook-comment",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Comment 'Interested'?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Comment 'Interested'?": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Is New User?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New User?": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "3740b6e0-4430-4a21-b869-7d947b1dc37b",
+  "meta": {
+    "instanceId": "4c7eb5b21779d290a5c989804ef89dc14381d58b7851facd9bfa64f580db60b5"
+  },
+  "id": "QRwRstrS1oEyM7TY",
+  "tags": []
+}
